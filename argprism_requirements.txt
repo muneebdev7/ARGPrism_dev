@@ -1,0 +1,25 @@
+# Core scientific stack
+numpy==2.2.3
+pandas==2.2.3
+scipy==1.15.2
+scikit-learn==1.6.1
+
+# Bioinformatics + file I/O
+biopython==1.85
+h5py==3.13.0
+
+# NLP / DL
+torch==2.6.0
+transformers==4.49.0
+sentencepiece==0.2.0
+
+# Plotting / utils
+matplotlib==3.10.1
+seaborn==0.13.2
+tqdm==4.67.1
+requests==2.32.3
+pillow==11.2.1
+regex==2024.11.6
+
+# Cloud (only keep if your pipeline touches S3)
+boto3==1.37.7
