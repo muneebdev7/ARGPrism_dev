@@ -1,0 +1,207 @@
+====================================================================================================
+                                    ARGprism Package Structure
+====================================================================================================
+
+ROOT DIRECTORY: /home/muneeb/my_ARGprism/
+│
+├── 📦 CONDA PACKAGE FILES
+│   ├── setup.py                        # Python package setup configuration
+│   ├── meta.yaml                       # Conda recipe for building package
+│   ├── environment_user.yml            # User-facing environment file (RECOMMENDED)
+│   ├── environment.yml                 # Original development environment
+│   ├── requirements.txt                # Python dependencies (pip)
+│   ├── argprism_requirements.txt       # Original requirements (kept for reference)
+│   ├── MANIFEST.in                     # Package data files manifest
+│   └── LICENSE                         # MIT License
+│
+├── 📚 DOCUMENTATION
+│   ├── README.md                       # Main documentation (comprehensive overview)
+│   ├── INSTALL.md                      # Installation instructions & troubleshooting
+│   ├── USER_GUIDE.md                   # Complete user guide with examples
+│   ├── PACKAGE_BUILD_GUIDE.md          # Developer guide for building package
+│   └── QUICK_REFERENCE.md              # Quick commands reference
+│
+├── 🔧 UTILITY SCRIPTS
+│   ├── build_package.sh                # Automated conda package build script
+│   ├── run_batch.sh                    # Batch processing multiple samples
+│   └── argprism_pipeline_timestamp.py  # Original standalone script (reference)
+│
+├── 🐍 PYTHON PACKAGE: argprism/
+│   ├── __init__.py                     # Package initialization
+│   ├── classifier.py                   # ARG neural network classifier
+│   ├── embeddings.py                   # ProtAlbert embedding generation
+│   ├── pipeline.py                     # Main ARGprism pipeline
+│   ├── cli.py                          # Command-line interface
+│   │
+│   ├── data/                           # Reference data (to be populated)
+│   │   ├── ARGPrismDB.fasta           # ARG reference database
+│   │   └── metadata_arg.json          # ARG metadata
+│   │
+│   └── models/                         # Model files (to be populated)
+│       └── best_model_fold4.pth       # Trained ARG classifier
+│
+├── 📊 DATA FILES (Root level - to be copied to package)
+│   ├── ARGPrismDB.fasta               # ARG reference database (27 sequences shown)
+│   └── metadata_arg.json              # ARG annotations
+│
+├── 🤖 MODEL FILES
+│   └── trained_model/
+│       └── best_model_fold4.pth       # Pre-trained classifier model
+│
+└── 🧬 SAMPLE DATA
+    └── Input_proteins/
+        ├── ERR589440_PROT.faa
+        ├── ERR589441_PROT.faa
+        ├── ERR589442_PROT.faa
+        ├── ERR589443_PROT.faa
+        ├── ERR589448_PROT.faa
+        ├── ERR589452_PROT.faa
+        ├── ERR589485_PROT.faa
+        ├── ERR589501_PROT.faa
+        ├── ERR589502_PROT.faa
+        └── ERR589503_PROT.faa
+
+====================================================================================================
+                                    Installation Workflow
+====================================================================================================
+
+FOR END USERS (Recommended Path):
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1. conda env create -f environment_user.yml                                                    │
+│ 2. conda activate argprism                                                                     │
+│ 3. argprism --version                                                                          │
+│ 4. argprism -i input.faa -c model.pth -d db.fasta -m meta.json -o results/                   │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+FOR DEVELOPERS (Package Building):
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 1. cp ARGPrismDB.fasta argprism/data/                                                         │
+│ 2. cp metadata_arg.json argprism/data/                                                        │
+│ 3. cp trained_model/best_model_fold4.pth argprism/models/                                    │
+│ 4. ./build_package.sh                                                                          │
+│ 5. conda install conda-build/noarch/argprism-1.0.0-py_0.tar.bz2                              │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+====================================================================================================
+                                    ARGprism Pipeline Flow
+====================================================================================================
+
+INPUT: protein.faa
+    │
+    ├─→ [1] LOAD PROTALBERT MODEL
+    │       ↓ Rostlab/prot_albert from HuggingFace
+    │       ↓ 4096-dimensional embeddings
+    │
+    ├─→ [2] GENERATE EMBEDDINGS
+    │       ↓ Process each sequence
+    │       ↓ Replace non-standard amino acids
+    │       ↓ Tokenize with spaces
+    │       ↓ Mean pooling
+    │
+    ├─→ [3] LOAD ARG CLASSIFIER
+    │       ↓ best_model_fold4.pth
+    │       ↓ 4096 → 512 → 128 → 2
+    │
+    ├─→ [4] CLASSIFY SEQUENCES
+    │       ↓ Predict: ARG or Non-ARG
+    │       ↓ Save predicted ARGs to FASTA
+    │
+    ├─→ [5] DIAMOND BLAST MAPPING
+    │       ↓ Build/use ARGPrismDB
+    │       ↓ blastp: predicted_ARGs vs reference
+    │       ↓ Get best hits (highest bitscore)
+    │
+    └─→ [6] GENERATE REPORT
+            ↓ Parse DIAMOND results
+            ↓ Load metadata
+            ↓ Annotate with ARG names & drugs
+            ↓
+OUTPUT: final_ARG_prediction_report.csv
+
+====================================================================================================
+                                    Dependency Architecture
+====================================================================================================
+
+CONDA-MANAGED (System-level):
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ • Python 3.13.2                                                                                │
+│ • PyTorch 2.6.0 + CUDA 12.4 + cuDNN 9.1.0                                                     │
+│ • DIAMOND 2.1.9 (bioconda)                                                                     │
+│ • BLAST 2.16.0 (bioconda)                                                                      │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+                                           ↓
+PIP-MANAGED (Python packages):
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Core Scientific:                                                                               │
+│   numpy 2.2.3, pandas 2.2.3, scipy 1.15.2, scikit-learn 1.6.1                               │
+│                                                                                                │
+│ Deep Learning:                                                                                 │
+│   transformers 4.49.0, sentencepiece 0.2.0                                                   │
+│                                                                                                │
+│ Bioinformatics:                                                                                │
+│   biopython 1.85, h5py 3.13.0                                                                │
+│                                                                                                │
+│ Visualization:                                                                                 │
+│   matplotlib 3.10.1, seaborn 0.13.2                                                          │
+│                                                                                                │
+│ Utilities:                                                                                     │
+│   tqdm 4.67.1, requests 2.32.3, boto3 1.37.7                                                 │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+====================================================================================================
+                                    Key Features & Design
+====================================================================================================
+
+✅ HYBRID DEPENDENCY MANAGEMENT
+   • Conda for system-level tools (DIAMOND, PyTorch+CUDA)
+   • Pip for Python packages
+   • Ensures maximum compatibility
+
+✅ FLEXIBLE EXECUTION
+   • Automatic GPU detection
+   • CPU fallback with --cpu flag
+   • Progress tracking with time estimates
+
+✅ MODULAR DESIGN
+   • Separate modules: embeddings, classifier, pipeline
+   • Command-line interface + Python API
+   • Easy to extend and customize
+
+✅ COMPREHENSIVE DOCUMENTATION
+   • Installation guide with troubleshooting
+   • User guide with examples
+   • Package building guide for developers
+
+✅ PRODUCTION READY
+   • Entry point: argprism command
+   • Batch processing support
+   • Error handling and validation
+
+====================================================================================================
+                                    Version Information
+====================================================================================================
+
+ARGprism Version:        1.0.0
+Python:                  3.11 - 3.13 (3.13 recommended)
+PyTorch:                 2.6.0
+CUDA:                    12.4
+Transformers:            4.49.0
+License:                 MIT
+Repository:              github.com/muneebdev7/ARGprism
+
+====================================================================================================
+
+NEXT STEPS FOR USERS:
+1. Read README.md for overview
+2. Follow INSTALL.md for installation
+3. Check USER_GUIDE.md for detailed usage
+4. Try example: argprism -i Input_proteins/ERR589503_PROT.faa ...
+
+NEXT STEPS FOR DEVELOPERS:
+1. Read PACKAGE_BUILD_GUIDE.md
+2. Prepare data files (copy to argprism/data/ and argprism/models/)
+3. Run ./build_package.sh
+4. Test the built package
+5. Publish to Anaconda.org or PyPI
+
+====================================================================================================
