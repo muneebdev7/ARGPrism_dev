@@ -1,118 +1,129 @@
-#!/usr/bin/env python
-"""
-Command-line interface for ARGprism
-"""
+"""Command line interface for ARGprism."""
+
+from __future__ import annotations
 
 import argparse
-import sys
-import os
-from pathlib import Path
+from typing import Iterable, Optional
 
-from .pipeline import ARGPrismPipeline
+from . import __version__
+from .constants import (
+    DEFAULT_ARG_DB,
+    DEFAULT_CLASSIFIER_PATH,
+    DEFAULT_DIAMOND_OUTPUT,
+    DEFAULT_DIAMOND_PREFIX,
+    DEFAULT_METADATA,
+    DEFAULT_OUTPUT_FASTA,
+    DEFAULT_REPORT,
+)
+from .pipeline import run_pipeline
 
 
-def main():
-    """Main CLI entry point."""
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description='ARGprism: Deep Learning-based Antibiotic Resistance Gene Prediction',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Basic usage with default paths
-  argprism -i input.faa -c model.pth -d ARGPrismDB.fasta -m metadata.json
-  
-  # Specify output directory
-  argprism -i input.faa -c model.pth -d ARGPrismDB.fasta -m metadata.json -o results/
-  
-  # Force CPU usage
-  argprism -i input.faa -c model.pth -d ARGPrismDB.fasta -m metadata.json --cpu
-        """
+        prog="argprism",
+        description="Deep learning-based antibiotic resistance gene prediction pipeline.",
     )
-    
-    # Required arguments
     parser.add_argument(
-        '-i', '--input',
-        required=True,
-        help='Input protein sequences in FASTA format'
+        "input_fasta",
+        help="Input protein FASTA file containing sequences to analyse.",
     )
-    
     parser.add_argument(
-        '-c', '--classifier',
-        required=True,
-        help='Path to trained ARG classifier model (.pth file)'
+        "--output-dir",
+        default="argprism_output",
+        help="Directory where pipeline outputs will be written (default: argprism_output).",
     )
-    
     parser.add_argument(
-        '-d', '--database',
-        required=True,
-        help='ARG reference database in FASTA format'
+        "--classifier",
+        default=str(DEFAULT_CLASSIFIER_PATH),
+        help="Path to the trained classifier checkpoint (.pth).",
     )
-    
     parser.add_argument(
-        '-m', '--metadata',
-        required=True,
-        help='ARG metadata in JSON format'
+        "--arg-db",
+        default=str(DEFAULT_ARG_DB),
+        help="Reference ARG FASTA used to build the DIAMOND database.",
     )
-    
-    # Optional arguments
     parser.add_argument(
-        '-o', '--output',
-        default='.',
-        help='Output directory (default: current directory)'
+        "--metadata",
+        default=str(DEFAULT_METADATA),
+        help="ARG metadata JSON file used for annotation.",
     )
-    
     parser.add_argument(
-        '--cpu',
-        action='store_true',
-        help='Force CPU usage (default: auto-detect GPU)'
+        "--output-fasta",
+        default=DEFAULT_OUTPUT_FASTA,
+        help="Filename for predicted ARG sequences (default: predicted_ARGs.fasta).",
     )
-    
     parser.add_argument(
-        '-v', '--version',
-        action='version',
-        version='ARGprism 1.0.0'
+        "--diamond-prefix",
+        default=DEFAULT_DIAMOND_PREFIX,
+        help="Prefix for the DIAMOND database files (default: diamond_arg_db).",
     )
-    
-    # Parse arguments
-    args = parser.parse_args()
-    
-    # Validate input files
-    for filepath, name in [
-        (args.input, 'Input file'),
-        (args.classifier, 'Classifier model'),
-        (args.database, 'Database file'),
-        (args.metadata, 'Metadata file')
-    ]:
-        if not os.path.exists(filepath):
-            print(f"Error: {name} not found: {filepath}", file=sys.stderr)
-            sys.exit(1)
-    
-    # Create output directory if needed
-    os.makedirs(args.output, exist_ok=True)
-    
-    # Determine device
-    device = 'cpu' if args.cpu else None
-    
-    # Run pipeline
-    try:
-        print("="*60)
-        print("ARGprism: Antibiotic Resistance Gene Prediction Pipeline")
-        print("="*60)
-        
-        pipeline = ARGPrismPipeline(args.classifier, device=device)
-        pipeline.run(
-            input_fasta=args.input,
-            arg_db_fasta=args.database,
-            metadata_json=args.metadata,
-            output_dir=args.output
-        )
-        
-    except Exception as e:
-        print(f"\nError: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    parser.add_argument(
+        "--diamond-output",
+        default=DEFAULT_DIAMOND_OUTPUT,
+        help="Filename for DIAMOND BLAST results (default: predicted_ARGs_vs_ref.tsv).",
+    )
+    parser.add_argument(
+        "--report",
+        default=DEFAULT_REPORT,
+        help="Filename for the final CSV report (default: final_ARG_prediction_report.csv).",
+    )
+    parser.add_argument(
+        "--device",
+        choices=["cpu", "cuda"],
+        help="Force execution on CPU or CUDA. Defaults to auto-detect.",
+    )
+    parser.add_argument(
+        "--diamond-executable",
+        default="diamond",
+        help="Name or path of the DIAMOND executable (default: diamond).",
+    )
+    parser.add_argument(
+        "--reuse-diamond-db",
+        action="store_true",
+        help="Skip rebuilding the DIAMOND database if it already exists.",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Reduce logging output.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"argprism {__version__}",
+    )
+    return parser
 
 
-if __name__ == '__main__':
-    main()
+def main(argv: Optional[Iterable[str]] = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(list(argv) if argv is not None else None)
+
+    result = run_pipeline(
+        input_fasta=args.input_fasta,
+        output_dir=args.output_dir,
+        classifier_path=args.classifier,
+        arg_db_fasta=args.arg_db,
+        metadata_json=args.metadata,
+        output_fasta=args.output_fasta,
+        diamond_db_prefix=args.diamond_prefix,
+        diamond_output=args.diamond_output,
+        final_report=args.report,
+        preferred_device=args.device,
+        diamond_executable=args.diamond_executable,
+        build_diamond_db=not args.reuse_diamond_db,
+        verbose=not args.quiet,
+    )
+
+    if not args.quiet:
+        print(f"Predictions saved to {result.predicted_fasta}")
+        if result.diamond_output:
+            print(f"DIAMOND hits written to {result.diamond_output}")
+        if result.report_csv:
+            print(f"Final report available at {result.report_csv}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

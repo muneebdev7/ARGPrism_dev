@@ -1,17 +1,6 @@
-"""
-ARGprism: Deep Learning-based Antibiotic Resistance Gene Prediction Pipeline
-"""
+"""ARGprism package."""
 
-__version__ = "1.0.0"
-__author__ = "Muneeb"
+from ._version import __version__
+from .pipeline import PipelineResult, run_pipeline
 
-from .pipeline import ARGPrismPipeline
-from .classifier import ARGClassifier
-from .embeddings import generate_embedding, generate_embeddings
-
-__all__ = [
-    'ARGPrismPipeline',
-    'ARGClassifier',
-    'generate_embedding',
-    'generate_embeddings',
-]
+__all__ = ["run_pipeline", "PipelineResult", "__version__"]

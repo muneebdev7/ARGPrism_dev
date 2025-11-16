@@ -1,74 +1,64 @@
 #!/usr/bin/env python
-"""
-ARGprism: Deep Learning-based Antibiotic Resistance Gene Prediction Pipeline
-"""
+"""Setup script for the ARGprism package."""
 
-from setuptools import setup, find_packages
-import os
+from pathlib import Path
 
-# Read the contents of README file
-this_directory = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
-    long_description = f.read()
+from setuptools import find_packages, setup
+
+ROOT = Path(__file__).resolve().parent
+VERSION_NS: dict[str, str] = {}
+exec((ROOT / "argprism" / "_version.py").read_text(), VERSION_NS)
+
+
+def _read_requirements(path: Path) -> list[str]:
+    requirements: list[str] = []
+    if not path.exists():
+        return requirements
+    for raw_line in path.read_text().splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        requirements.append(line)
+    return requirements
+
+
+INSTALL_REQUIRES = _read_requirements(ROOT / "argprism_requirements.txt")
+LONG_DESCRIPTION = (ROOT / "README.md").read_text(encoding="utf-8") if (ROOT / "README.md").exists() else ""
 
 setup(
-    name='argprism',
-    version='1.0.0',
-    description='Deep Learning-based Antibiotic Resistance Gene Prediction Pipeline',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    author='Muneeb',
-    author_email='your.email@example.com',
-    url='https://github.com/muneebdev7/ARGprism',
-    license='MIT',
-    
-    packages=find_packages(),
-    package_data={
-        'argprism': [
-            'data/ARGPrismDB.fasta',
-            'data/metadata_arg.json',
-            'models/best_model_fold4.pth',
-        ],
-    },
+    name="argprism",
+    version=VERSION_NS["__version__"],
+    description="Deep Learning-based Antibiotic Resistance Gene Prediction Pipeline",
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/markdown",
+    author="Muneeb",
+    url="https://github.com/muneebdev7/ARGprism",
+    license="MIT",
+    packages=find_packages(exclude=("tests", "docs")),
     include_package_data=True,
-    
-    python_requires='>=3.11,<3.14',
-    
-    install_requires=[
-        'numpy>=2.2.3,<3.0',
-        'pandas>=2.2.3,<3.0',
-        'scipy>=1.15.2,<2.0',
-        'scikit-learn>=1.6.1,<2.0',
-        'biopython>=1.85,<2.0',
-        'h5py>=3.13.0,<4.0',
-        'torch>=2.6.0,<3.0',
-        'transformers>=4.49.0,<5.0',
-        'sentencepiece>=0.2.0',
-        'matplotlib>=3.10.1,<4.0',
-        'seaborn>=0.13.2,<1.0',
-        'tqdm>=4.67.1,<5.0',
-        'requests>=2.32.3,<3.0',
-        'pillow>=11.2.1,<12.0',
-        'regex>=2024.11.6',
-        'boto3>=1.37.7',  # Optional, for S3 support
-    ],
-    
-    entry_points={
-        'console_scripts': [
-            'argprism=argprism.cli:main',
-        ],
+    package_data={
+        "argprism": [
+            "data/*.fasta",
+            "data/*.json",
+            "models/*.pth",
+        ]
     },
-    
+    python_requires=">=3.11,<3.14",
+    install_requires=INSTALL_REQUIRES,
+    entry_points={
+        "console_scripts": [
+            "argprism=argprism.cli:main",
+        ]
+    },
     classifiers=[
-        'Development Status :: 4 - Beta',
-        'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: Bio-Informatics',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: 3.13',
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
     ],
-    
-    keywords='bioinformatics antibiotic-resistance deep-learning protein-sequences',
+    keywords="bioinformatics antibiotic-resistance deep-learning protein-sequences",
 )

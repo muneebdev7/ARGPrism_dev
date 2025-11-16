@@ -1,91 +1,67 @@
-"""
-Protein embedding generation using ProtAlbert
-"""
+"""ProtAlbert embedding utilities."""
+
+from __future__ import annotations
+
+import time
+from pathlib import Path
+from typing import Dict, Tuple
 
 import torch
 from Bio import SeqIO
-from transformers import AlbertTokenizer, AlbertModel
-import time
+from Bio.SeqRecord import SeqRecord
+from transformers import AlbertModel, AlbertTokenizer
+
+from .constants import PROT_ALBERT_MODEL
 
 
-def load_protalbert_model(device='cuda'):
-    """
-    Load ProtAlbert model and tokenizer.
-    
-    Args:
-        device: 'cuda' or 'cpu'
-        
-    Returns:
-        tuple: (model, tokenizer)
-    """
-    model = AlbertModel.from_pretrained("Rostlab/prot_albert").to(device)
-    tokenizer = AlbertTokenizer.from_pretrained("Rostlab/prot_albert", do_lower_case=False)
-    return model, tokenizer
+def load_plm(device: torch.device) -> tuple[AlbertTokenizer, AlbertModel]:
+    """Load the ProtAlbert tokenizer and model on the requested device."""
+    tokenizer = AlbertTokenizer.from_pretrained(PROT_ALBERT_MODEL, do_lower_case=False)
+    model = AlbertModel.from_pretrained(PROT_ALBERT_MODEL).to(device)
+    model.eval()
+    return tokenizer, model
 
 
-def generate_embedding(sequence, model, tokenizer, device='cuda'):
-    """
-    Generate embedding for a single protein sequence.
-    
-    Args:
-        sequence: Protein sequence string
-        model: ProtAlbert model
-        tokenizer: ProtAlbert tokenizer
-        device: 'cuda' or 'cpu'
-        
-    Returns:
-        numpy array: 4096-dimensional embedding
-    """
-    # Preprocess sequence: replace non-standard amino acids
-    seq = sequence.replace('U', 'X').replace('Z', 'X').replace('O', 'X')
-    
-    # Tokenize with spaces between amino acids
-    tokens = tokenizer(' '.join(list(seq)), return_tensors='pt', padding=True, truncation=True).to(device)
-    
-    # Generate embedding
+def _clean_sequence(sequence: str) -> str:
+    return sequence.replace("U", "X").replace("Z", "X").replace("O", "X")
+
+
+def embed_sequence(sequence: str, tokenizer: AlbertTokenizer, model: AlbertModel, device: torch.device) -> torch.Tensor:
+    tokens = tokenizer(" ".join(sequence), return_tensors="pt", padding=True, truncation=True).to(device)
     with torch.no_grad():
         outputs = model(**tokens)
-    
-    # Use mean pooling across sequence length
-    return outputs.last_hidden_state.mean(dim=1).cpu().numpy()[0]
+    return outputs.last_hidden_state.mean(dim=1).squeeze(0).cpu()
 
 
-def generate_embeddings(input_fasta, model, tokenizer, device='cuda', verbose=True):
-    """
-    Generate embeddings for all sequences in a FASTA file.
-    
-    Args:
-        input_fasta: Path to input FASTA file
-        model: ProtAlbert model
-        tokenizer: ProtAlbert tokenizer
-        device: 'cuda' or 'cpu'
-        verbose: Whether to print progress
-        
-    Returns:
-        tuple: (embeddings_dict, sequences_dict)
-    """
-    embeddings = {}
-    sequences = {}
-    
-    # Count total sequences
-    total = sum(1 for _ in SeqIO.parse(input_fasta, "fasta"))
+def generate_embeddings(
+    input_fasta: Path,
+    tokenizer: AlbertTokenizer,
+    model: AlbertModel,
+    device: torch.device,
+    verbose: bool = True,
+) -> Tuple[Dict[str, torch.Tensor], Dict[str, SeqRecord]]:
+    embeddings: Dict[str, torch.Tensor] = {}
+    sequences: Dict[str, SeqRecord] = {}
+    records = list(SeqIO.parse(input_fasta, "fasta"))
+    total = len(records)
     start_time = time.time()
 
-    for count, record in enumerate(SeqIO.parse(input_fasta, "fasta"), 1):
+    for index, record in enumerate(records, start=1):
+        seq = _clean_sequence(str(record.seq))
         sequences[record.id] = record
-        emb = generate_embedding(str(record.seq), model, tokenizer, device)
-        embeddings[record.id] = emb
-        
+        embeddings[record.id] = embed_sequence(seq, tokenizer, model, device)
+
         if verbose:
-            # Estimate remaining time
-            elapsed_time = time.time() - start_time
-            progress = count / total
-            remaining_time = (elapsed_time / progress) - elapsed_time if progress > 0 else 0
-            
-            print(f"\rProgress: {progress*100:.2f}% | Elapsed: {elapsed_time:.2f}s | "
-                  f"Estimated Remaining: {remaining_time:.2f}s", end="")
-    
+            elapsed = time.time() - start_time
+            progress = index / total if total else 1.0
+            remaining = (elapsed / progress) - elapsed if progress else 0.0
+            print(
+                f"\rEmbedding {index}/{total}"
+                f" | {progress*100:.2f}%"
+                f" | Elapsed {elapsed:.1f}s"
+                f" | Remaining {remaining:.1f}s",
+                end="",
+            )
     if verbose:
-        print()  # Newline after progress
-    
+        print()
     return embeddings, sequences
