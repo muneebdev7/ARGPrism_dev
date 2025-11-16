@@ -1,73 +1,59 @@
-{% set name = "argprism" %}
-{% set version = "1.0.0" %}
-
 package:
-  name: {{ name|lower }}
-  version: {{ version }}
+  name: argprism
+  version: "1.0.0"
 
 source:
   path: .
 
 build:
   number: 0
-  script: {{ PYTHON }} -m pip install . -vv
-  noarch: python
+  script: python -m pip install . -vv
+  skip: true  # [not linux]
 
 requirements:
   host:
-    - python >=3.11,<3.14
+    - python >=3.13,<3.14
     - pip
     - setuptools
+    - wheel
   run:
-    # Core Python dependencies
-    - python >=3.11,<3.14
-    - pip
-    
-    # Conda-managed dependencies
-    - blast =2.16.0
-    - diamond =2.1.9
-    - ncbi-vdb =3.2.0
-    - bzip2 =1.0.8
-    - curl >=8.12
-    - openssl >=3.4
-    
-    # Python packages (will be installed via pip in post-link)
-    - numpy >=2.2,<3.0
-    - pandas >=2.2,<3.0
-    - scipy >=1.15,<2.0
-    - scikit-learn >=1.6,<2.0
-    - biopython >=1.85,<2.0
-    - h5py >=3.13,<4.0
-    - pytorch >=2.6,<3.0
-    - pytorch-cuda =12.4
-    - transformers >=4.49,<5.0
-    - sentencepiece >=0.2.0
-    - matplotlib >=3.10,<4.0
-    - seaborn >=0.13,<1.0
-    - tqdm >=4.67,<5.0
-    - requests >=2.32,<3.0
+    - python >=3.13,<3.14
+    - numpy ==2.2.3
+    - pandas ==2.2.3
+    - scipy ==1.15.2
+    - scikit-learn ==1.6.1
+    - biopython ==1.85
+    - h5py ==3.13.0
+    - pytorch ==2.6.0
+    - transformers ==4.49.0
+    - sentencepiece ==0.2.0
+    - matplotlib ==3.10.1
+    - seaborn ==0.13.2
+    - tqdm ==4.67.1
+    - requests ==2.32.3
+    - pillow ==11.2.1
+    - regex ==2024.11.6
+    - boto3 ==1.37.7
+    - diamond >=2.1.15
 
 test:
   imports:
-    - torch
-    - transformers
-    - Bio
+    - argprism
   commands:
-    - diamond version
-    - python -c "import torch; print(torch.cuda.is_available())"
+    - argprism --version
 
 about:
   home: https://github.com/muneebdev7/ARGprism
   license: MIT
   license_file: LICENSE
-  summary: 'ARGprism: Deep Learning-based Antibiotic Resistance Gene Prediction Pipeline'
+  summary: "ARGprism: Deep Learning-based Antibiotic Resistance Gene Prediction Pipeline"
   description: |
-    ARGprism is a comprehensive pipeline for predicting antibiotic resistance genes (ARGs) 
-    from protein sequences using deep learning. It employs ProtAlbert embeddings and a 
-    trained neural network classifier, followed by DIAMOND BLAST mapping against a reference 
+    ARGprism is a comprehensive pipeline for predicting antibiotic resistance genes (ARGs)
+    from protein sequences using deep learning. It employs ProtAlbert embeddings and a
+    trained neural network classifier, followed by DIAMOND BLAST mapping against a reference
     ARG database for functional annotation.
   dev_url: https://github.com/muneebdev7/ARGprism
-  doc_url: https://github.com/muneebdev7/ARGprism/README.md
+  doc_url: https://github.com/muneebdev7/ARGprism#readme
 
 extra:
   recipe-maintainers:
