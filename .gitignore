@@ -1,0 +1,8 @@
+# IDEs
+.vscode/
+__pycache__
+
+# ARGprism specific
+Test_arg_output/
+results/
+argprism.egg-info/

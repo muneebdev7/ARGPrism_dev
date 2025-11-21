@@ -1,0 +1,60 @@
+package:
+  name: argprism
+  version: "1.0.0"
+
+source:
+  path: .
+
+build:
+  number: 0
+  script: python -m pip install . -vv
+  skip: true  # [not linux]
+
+requirements:
+  host:
+    - python >=3.13,<3.14
+    - pip
+    - setuptools
+    - wheel
+  run:
+    - python >=3.13,<3.14
+    - numpy ==2.2.3
+    - pandas ==2.2.3
+    - scipy ==1.15.2
+    - scikit-learn ==1.6.1
+    - biopython ==1.85
+    - h5py ==3.13.0
+    - pytorch ==2.6.0
+    - transformers ==4.49.0
+    - sentencepiece ==0.2.0
+    - matplotlib ==3.10.1
+    - seaborn ==0.13.2
+    - tqdm ==4.67.1
+    - requests ==2.32.3
+    - pillow ==11.2.1
+    - regex ==2024.11.6
+    - boto3 ==1.37.7
+    - diamond >=2.1.15
+
+test:
+  imports:
+    - argprism
+  commands:
+    - argprism --version
+
+about:
+  home: https://github.com/haseebmanzur/ARGPrism
+  license: MIT
+  license_file: LICENSE
+  summary: "ARGprism: Deep Learning-based Antibiotic Resistance Gene Prediction Pipeline"
+  description: |
+    ARGprism is a comprehensive pipeline for predicting antibiotic resistance genes (ARGs)
+    from protein sequences using deep learning. It employs ProtAlbert embeddings and a
+    trained neural network classifier, followed by DIAMOND BLAST mapping against a reference
+    ARG database for functional annotation.
+  dev_url: https://github.com/muneebdev7/ARGPrism_dev
+  doc_url: https://github.com/haseebmanzur/ARGPrism/blob/main/README.md
+
+extra:
+  recipe-maintainers:
+    - muneebdev7
