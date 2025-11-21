@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-PACKAGE_ROOT = Path(__file__).resolve().parent
+PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PACKAGE_ROOT / "data"
 MODELS_DIR = PACKAGE_ROOT / "models"
 
