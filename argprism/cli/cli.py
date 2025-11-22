@@ -14,13 +14,9 @@ os.environ["OMP_NUM_THREADS"] = "1"
 
 from .. import __version__
 from ..io.file_paths import (
-    DEFAULT_ARG_DB,
-    DEFAULT_CLASSIFIER_PATH,
-    DEFAULT_DIAMOND_OUTPUT,
-    DEFAULT_DIAMOND_PREFIX,
-    DEFAULT_METADATA,
-    DEFAULT_OUTPUT_FASTA,
-    DEFAULT_REPORT,
+    DEFAULT_DIAMOND_BLAST_OUTPUT_FILENAME,
+    DEFAULT_PREDICTED_ARGS_FASTA_FILENAME,
+    DEFAULT_FINAL_REPORT_CSV_FILENAME,
 )
 from ..core.pipeline import run_pipeline
 
@@ -40,49 +36,24 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Directory where pipeline outputs will be written (default: argprism_output).",
     )
     parser.add_argument(
-        "--classifier",
-        default=str(DEFAULT_CLASSIFIER_PATH),
-        help="Path to the trained classifier checkpoint (.pth).",
-    )
-    parser.add_argument(
-        "--arg-db",
-        default=str(DEFAULT_ARG_DB),
-        help="Reference ARG FASTA used to build the DIAMOND database.",
-    )
-    parser.add_argument(
-        "--metadata",
-        default=str(DEFAULT_METADATA),
-        help="ARG metadata JSON file used for annotation.",
-    )
-    parser.add_argument(
         "--output-fasta",
-        default=DEFAULT_OUTPUT_FASTA,
+        default=DEFAULT_PREDICTED_ARGS_FASTA_FILENAME,
         help="Filename for predicted ARG sequences (default: predicted_ARGs.fasta).",
     )
     parser.add_argument(
-        "--diamond-prefix",
-        default=DEFAULT_DIAMOND_PREFIX,
-        help="Prefix for the DIAMOND database files (default: diamond_arg_db).",
-    )
-    parser.add_argument(
         "--diamond-output",
-        default=DEFAULT_DIAMOND_OUTPUT,
+        default=DEFAULT_DIAMOND_BLAST_OUTPUT_FILENAME,
         help="Filename for DIAMOND BLAST results (default: predicted_ARGs_vs_ref.tsv).",
     )
     parser.add_argument(
         "--report",
-        default=DEFAULT_REPORT,
+        default=DEFAULT_FINAL_REPORT_CSV_FILENAME,
         help="Filename for the final CSV report (default: final_ARG_prediction_report.csv).",
     )
     parser.add_argument(
         "--device",
         choices=["cpu", "cuda"],
         help="Force execution on CPU or CUDA. Defaults to auto-detect.",
-    )
-    parser.add_argument(
-        "--diamond-executable",
-        default="diamond",
-        help="Name or path of the DIAMOND executable (default: diamond).",
     )
     parser.add_argument(
         "--reuse-diamond-db",
@@ -109,15 +80,10 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     result = run_pipeline(
         input_fasta=args.input_fasta,
         output_dir=args.output_dir,
-        classifier_path=args.classifier,
-        arg_db_fasta=args.arg_db,
-        metadata_json=args.metadata,
         output_fasta=args.output_fasta,
-        diamond_db_prefix=args.diamond_prefix,
         diamond_output=args.diamond_output,
         final_report=args.report,
         preferred_device=args.device,
-        diamond_executable=args.diamond_executable,
         build_diamond_db=not args.reuse_diamond_db,
         verbose=not args.quiet,
     )
