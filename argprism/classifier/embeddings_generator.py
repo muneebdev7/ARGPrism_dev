@@ -11,13 +11,13 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from transformers import AlbertModel, AlbertTokenizer
 
-from ..io.file_paths import PROT_ALBERT_MODEL
+from ..io.file_paths import PRETRAINED_PROTEIN_LANGUAGE_MODEL
 
 
 def load_plm(device: torch.device) -> tuple[AlbertTokenizer, AlbertModel]:
     """Load the ProtAlbert tokenizer and model on the requested device."""
-    tokenizer = AlbertTokenizer.from_pretrained(PROT_ALBERT_MODEL, do_lower_case=False)
-    model = AlbertModel.from_pretrained(PROT_ALBERT_MODEL).to(device)
+    tokenizer = AlbertTokenizer.from_pretrained(PRETRAINED_PROTEIN_LANGUAGE_MODEL, do_lower_case=False)
+    model = AlbertModel.from_pretrained(PRETRAINED_PROTEIN_LANGUAGE_MODEL).to(device)
     model.eval()
     return tokenizer, model
 

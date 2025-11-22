@@ -9,13 +9,13 @@ from typing import Dict, Optional
 
 from ..classifier.arg_classifier import ARGClassifier, classify_embeddings, load_classifier
 from ..io.file_paths import (
-    DEFAULT_ARG_DB,
-    DEFAULT_CLASSIFIER_PATH,
-    DEFAULT_DIAMOND_OUTPUT,
-    DEFAULT_DIAMOND_PREFIX,
-    DEFAULT_METADATA,
-    DEFAULT_OUTPUT_FASTA,
-    DEFAULT_REPORT,
+    DEFAULT_ARG_REFERENCE_DATABASE_FASTA,
+    DEFAULT_ARG_CLASSIFIER_MODEL_PATH,
+    DEFAULT_DIAMOND_BLAST_OUTPUT_FILENAME,
+    DEFAULT_DIAMOND_DATABASE_PREFIX,
+    DEFAULT_ARG_METADATA_JSON,
+    DEFAULT_PREDICTED_ARGS_FASTA_FILENAME,
+    DEFAULT_FINAL_REPORT_CSV_FILENAME,
     PACKAGE_ROOT,
 )
 from .device_manager import select_device
@@ -37,13 +37,13 @@ class PipelineResult:
 def run_pipeline(
     input_fasta: Path | str,
     output_dir: Path | str,
-    classifier_path: Path | str = DEFAULT_CLASSIFIER_PATH,
-    arg_db_fasta: Path | str = DEFAULT_ARG_DB,
-    metadata_json: Path | str = DEFAULT_METADATA,
-    output_fasta: Path | str = DEFAULT_OUTPUT_FASTA,
-    diamond_db_prefix: Path | str = DEFAULT_DIAMOND_PREFIX,
-    diamond_output: Path | str = DEFAULT_DIAMOND_OUTPUT,
-    final_report: Path | str = DEFAULT_REPORT,
+    classifier_path: Path | str = DEFAULT_ARG_CLASSIFIER_MODEL_PATH,
+    arg_db_fasta: Path | str = DEFAULT_ARG_REFERENCE_DATABASE_FASTA,
+    metadata_json: Path | str = DEFAULT_ARG_METADATA_JSON,
+    output_fasta: Path | str = DEFAULT_PREDICTED_ARGS_FASTA_FILENAME,
+    diamond_db_prefix: Path | str = DEFAULT_DIAMOND_DATABASE_PREFIX,
+    diamond_output: Path | str = DEFAULT_DIAMOND_BLAST_OUTPUT_FILENAME,
+    final_report: Path | str = DEFAULT_FINAL_REPORT_CSV_FILENAME,
     preferred_device: Optional[str] = None,
     diamond_executable: str = "diamond",
     build_diamond_db: bool = True,
