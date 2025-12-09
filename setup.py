@@ -22,7 +22,7 @@ def _read_requirements(path: Path) -> list[str]:
     return requirements
 
 
-INSTALL_REQUIRES = _read_requirements(ROOT / "argprism_requirements.txt")
+INSTALL_REQUIRES = _read_requirements(ROOT / "requirements.txt")
 LONG_DESCRIPTION = (ROOT / "README.md").read_text(encoding="utf-8") if (ROOT / "README.md").exists() else ""
 
 setup(
