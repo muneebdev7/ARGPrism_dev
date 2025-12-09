@@ -3,7 +3,6 @@
 __pycache__
 
 # ARGprism specific
-Test*/
 results/
 argprism.egg-info/
-*.faa
+conda-bld/
