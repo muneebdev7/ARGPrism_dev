@@ -6,6 +6,8 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
+from ..utils.console import print_status
+
 
 def run_diamond(
     predicted_fasta: Path,
@@ -21,7 +23,7 @@ def run_diamond(
     if build_db and not db_path.exists():
         cmd_makedb = [diamond_executable, "makedb", "--in", str(arg_db_fasta), "-d", str(diamond_db_prefix)]
         if verbose:
-            print("Running:", " ".join(cmd_makedb))
+            print_status(f"Building DIAMOND database: {' '.join(cmd_makedb)}", "cyan")
         subprocess.run(cmd_makedb, check=True)
 
     cmd_blastp = [
@@ -43,5 +45,5 @@ def run_diamond(
         "bitscore",
     ]
     if verbose:
-        print("Running:", " ".join(cmd_blastp))
+        print_status(f"Running DIAMOND BLASTP: {' '.join(cmd_blastp)}", "cyan")
     subprocess.run(cmd_blastp, check=True)

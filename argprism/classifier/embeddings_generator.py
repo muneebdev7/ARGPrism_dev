@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 import time
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -10,8 +11,10 @@ import torch
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from transformers import AlbertModel, AlbertTokenizer
+from rich.console import Console
 
 from ..io.file_paths import PRETRAINED_PROTEIN_LANGUAGE_MODEL
+from ..utils.console import print_status
 
 
 def load_plm(device: torch.device) -> tuple[AlbertTokenizer, AlbertModel]:
@@ -94,9 +97,10 @@ def generate_embeddings(
     
     embeddings: Dict[str, torch.Tensor] = {}
     start_time = time.time()
+    console = Console()
     
     if verbose:
-        print(f"Processing {total} sequences in a batch size of {batch_size} sequences...")
+        print_status(f"Processing {total} sequences in a batch size of {batch_size} sequences...", "cyan")
     
     # Process sequences in batches
     for i in range(0, total, batch_size):
@@ -119,17 +123,18 @@ def generate_embeddings(
             progress = processed / total
             remaining = (elapsed / progress) - elapsed if progress > 0 else 0.0
             
-            print(
-                f"\rEmbedding batch {(i // batch_size) + 1}/{(total + batch_size - 1) // batch_size} "
-                f"| {processed}/{total} ({progress*100:.1f}%) "
-                f"| Elapsed {elapsed:.1f}s | Remaining {remaining:.1f}s",
-                end="",
-            )
+            # Use regular print with \r for proper line overwriting
+            msg = (f"[+] Embedding batch {(i // batch_size) + 1}/{(total + batch_size - 1) // batch_size} "
+                    f"| {processed}/{total} ({progress*100:.1f}%) "
+                    f"| Elapsed {elapsed:.1f}s | Remaining {remaining:.1f}s")
+            print(f"\r{msg}", end="", flush=True)
     
     if verbose:
+        # Print newline to move past the progress line
+        print()
         elapsed = time.time() - start_time
-        print(f"\nCompleted embedding generation in {elapsed:.1f}s")
-        print(f"Average time per sequence: {elapsed/total:.3f}s")
+        print_status(f"Completed embedding generation in {elapsed:.1f}s", "green")
+        print_status(f"Average time per sequence: {elapsed/total:.3f}s", "green")
     
     return embeddings, sequences
 

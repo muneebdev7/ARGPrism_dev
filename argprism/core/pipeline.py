@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
 
+from ..utils.console import print_status
 from ..classifier.arg_classifier import ARGClassifier, classify_embeddings, load_classifier
 from ..io.file_paths import (
     DEFAULT_ARG_REFERENCE_DATABASE_FASTA,
@@ -64,38 +65,38 @@ def run_pipeline(
     final_report_path = output_dir / Path(final_report)
 
     if verbose:
-        print(f"Loading resources from {PACKAGE_ROOT}")
+        print_status(f"Loading resources from {PACKAGE_ROOT}", "cyan")
 
     device = select_device(preferred_device)
     if verbose:
-        print(f"Using device: {device}")
+        print_status(f"Using device: '{device}'", "cyan")
 
     tokenizer, model = load_plm(device)
     if verbose:
-        print("Generating embeddings for input sequences...")
+        print_status("Generating embeddings for input sequences...", "cyan")
     embeddings, sequences = generate_embeddings(input_fasta, tokenizer, model, device, verbose=verbose)
 
     if verbose:
-        print("Loading classifier...")
+        print_status("Loading classifier...", "cyan")
     classifier = load_classifier(classifier_path, device)
 
     if verbose:
-        print("Classifying sequences...")
+        print_status("Classifying sequences...", "cyan")
     predictions = classify_embeddings(embeddings, classifier, device)
 
     if verbose:
-        print("Saving predicted ARG sequences...")
+        print_status("Saving predicted ARG sequences...", "cyan")
     predicted_count = save_predicted_args(sequences, predictions, output_fasta)
 
     diamond_path: Optional[Path] = None
     report_path: Optional[Path] = None
 
     if predicted_count and verbose:
-        print(f"Saved {predicted_count} predicted ARG sequences to {output_fasta}")
+        print_status(f"Saved {predicted_count} predicted ARG sequences to {output_fasta}", "green")
 
     if predicted_count:
         if verbose:
-            print("Mapping predicted ARGs to reference ARG database with DIAMOND...")
+            print_status("Mapping predicted ARGs to reference ARG database with DIAMOND...", "cyan")
         run_diamond(
             output_fasta,
             arg_db_fasta,
@@ -108,23 +109,23 @@ def run_pipeline(
         diamond_path = diamond_output
 
         if verbose:
-            print("Loading ARG metadata...")
+            print_status("Loading ARG metadata...", "cyan")
         metadata = load_metadata(metadata_json)
 
         if verbose:
-            print("Parsing DIAMOND mapping results...")
+            print_status("Parsing DIAMOND mapping results...", "cyan")
         best_hits = parse_diamond_hits(diamond_output)
 
         if verbose:
-            print("Generating final annotated report...")
+            print_status("Generating final annotated report...", "cyan")
         generate_report(predictions, best_hits, metadata, final_report_path)
         report_path = final_report_path
     elif verbose:
-        print("No ARG predictions were made; skipping DIAMOND mapping and report generation.")
+        print_status("No ARG predictions were made; skipping DIAMOND mapping and report generation.", "yellow")
 
     elapsed = time.time() - start_time
     if verbose:
-        print(f"Pipeline complete in {elapsed:.2f} seconds")
+        print_status(f"Pipeline complete in {elapsed:.2f} seconds", "green")
 
     return PipelineResult(
         predictions=predictions,
