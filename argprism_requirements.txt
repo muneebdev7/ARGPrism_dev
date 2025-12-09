@@ -20,6 +20,7 @@ tqdm==4.67.1
 requests==2.32.3
 pillow==11.2.1
 regex==2024.11.6
+rich==13.9.4
 
 # Cloud (only keep if your pipeline touches S3)
 boto3==1.37.7

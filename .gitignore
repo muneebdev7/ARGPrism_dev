@@ -3,6 +3,7 @@
 __pycache__
 
 # ARGprism specific
-Test_arg_output/
+Test*/
 results/
 argprism.egg-info/
+*.faa
