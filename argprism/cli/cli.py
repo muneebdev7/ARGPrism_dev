@@ -89,7 +89,7 @@ class ARGPrismCLI:
 ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚═╝╚══════╝╚═╝     ╚═╝
         """
         self.console.print(Text(banner, style="magenta"))
-        self.console.print(Panel(Text("ARGPrism CLI Agent", justify="right"), style="bold blue", expand=False))
+        self.console.print(Panel(Text("ARGPrism CLI Agent v1.0.0", justify="right"), style="bold red", expand=False))
     
     def print_status(self, message, style="green"):
         """Print status messages with Rich formatting."""
@@ -164,7 +164,7 @@ class ARGPrismCLI:
         if args.help or len(sys.argv) == 1:
             self.print_help_table()
             self.console.print(Panel(Text("For more information, visit: https://github.com/haseebmanzur/ARGPrism", 
-                                        justify="center"), style="bold green", expand=False))
+                                        justify="center"), style="green", expand=False))
             return 0
         
         # Handle version
