@@ -21,6 +21,7 @@ def test_classifier_architecture_matches_checkpoint() -> None:
 def test_classifier_forward_pass() -> None:
     device = torch.device("cpu")
     classifier = load_classifier(MODEL_PATH, device)
+    classifier.eval()  # Set to evaluation mode to avoid BatchNorm issues with single sample
     dummy = torch.randn(1, 4096, device=device)
     output = classifier(dummy)
     assert output.shape == (1, 2)
