@@ -1,4 +1,4 @@
-# ARGPrism
+# ARG-PRISM
 
 [![Conda](https://img.shields.io/badge/conda-supported-brightgreen.svg?logo=anaconda&logoColor=white)](https://anaconda.org/)
 [![pip](https://img.shields.io/badge/pip-installable-blue.svg?logo=pypi&logoColor=white)](https://pypi.org/)
