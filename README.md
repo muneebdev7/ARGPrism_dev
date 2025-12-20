@@ -146,9 +146,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions or support, please open an issue on GitHub.
 
-**Project PI**: Dr. Masood Ur Rehman
-**Email**: m.kayani@sines.nust.edu.pk
-
 **Author**: Dr. Masood Ur Rehman  
 **GitHub**: m.kayani@sines.nust.edu.pk
 
