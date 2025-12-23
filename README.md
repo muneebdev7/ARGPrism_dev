@@ -1,4 +1,4 @@
-# ARGPrism
+# ARG-PRISM
 
 [![Conda](https://img.shields.io/badge/conda-supported-brightgreen.svg?logo=anaconda&logoColor=white)](https://anaconda.org/)
 [![pip](https://img.shields.io/badge/pip-installable-blue.svg?logo=pypi&logoColor=white)](https://pypi.org/)
@@ -145,6 +145,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 For questions or support, please open an issue on GitHub.
+
+**Project PI**: Dr. Masood Ur Rehman  
+**Email**: m.kayani@sines.nust.edu.pk
 
 **Author**: Haseeb Manzoor  
 **GitHub**: [@haseebmanzur](https://github.com/haseebmanzur)
