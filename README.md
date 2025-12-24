@@ -42,10 +42,10 @@
 
 ```bash
 # Install from conda-forge
-conda install -c conda-forge argprism
+mamba install -c bioconda argprism
 
 # Verify installation
-python -m argprism --version
+argprism --version
 ```
 
 ### Option 2: Install from Source
@@ -69,10 +69,10 @@ argprism --version
 
 ```bash
 # Activate environment
-conda activate argprism
+mamba activate argprism
 
 # Run on test data
-python -m argprism Test_dataset/ERR589441_PROT_sampled.faa --output-dir results/
+argprism Test_dataset/Test_data.faa --output-dir results/
 ```
 
 ## Usage
@@ -80,14 +80,14 @@ python -m argprism Test_dataset/ERR589441_PROT_sampled.faa --output-dir results/
 ### Command Line
 
 ```bash
-python -m argprism INPUT_FILE.faa [OPTIONS]
+argprism INPUT_FILE.faa [OPTIONS]
 ```
 
 ### Options
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--output-dir` | Output directory | `argprism_output` |
+| `-o, --output-dir` | Output directory | `argprism_output` |
 | `--device` | Force CPU/CUDA usage | Auto-detect |
 | `--quiet` | Reduce output verbosity | False |
 
@@ -147,7 +147,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For questions or support, please open an issue on GitHub.
 
 **Project PI**: Dr. Masood Ur Rehman  
-**Email**: m.kayani@sines.nust.edu.pk
+**Email**: <m.kayani@sines.nust.edu.pk>
 
 **Author**: Haseeb Manzoor  
 **GitHub**: [@haseebmanzur](https://github.com/haseebmanzur)
