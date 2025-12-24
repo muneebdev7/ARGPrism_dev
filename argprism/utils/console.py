@@ -6,6 +6,7 @@ status message formatting across all ARGPrism modules.
 
 from __future__ import annotations
 
+import logging
 from rich.console import Console
 
 _console = Console()

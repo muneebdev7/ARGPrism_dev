@@ -54,7 +54,7 @@ class ARGPrismCLI:
         self.logger = None
         self.console = Console()
     
-    def setup_logging(self, log_file=None, verbose=False, quiet=False):
+    def setup_logging(self, output_dir, log_file=None, verbose=False, quiet=False):
         """Configure logging based on command line arguments."""
         log_level = logging.INFO
         if verbose:
@@ -62,20 +62,42 @@ class ARGPrismCLI:
         elif quiet:
             log_level = logging.ERROR
         
-        logging.basicConfig(
-            level=log_level,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        # Create formatter
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S"
         )
         
+        # Determine log file path
         if log_file:
-            file_handler = logging.FileHandler(log_file)
-            file_handler.setFormatter(logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            ))
-            logging.getLogger().addHandler(file_handler)
+            # Use the specified log file path
+            log_path = Path(log_file)
+            # Create directory if it doesn't exist
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+        else:
+            # Create default log file in output directory
+            output_path = Path(output_dir)
+            output_path.mkdir(parents=True, exist_ok=True)
+            log_path = output_path / "argprism.log"
+        
+        # Configure root logger with only file handler (no console output)
+        root_logger = logging.getLogger()
+        root_logger.setLevel(log_level)
+        
+        # Clear any existing handlers
+        root_logger.handlers.clear()
+        
+        # Add only file handler
+        file_handler = logging.FileHandler(log_path)
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(log_level)
+        root_logger.addHandler(file_handler)
         
         self.logger = logging.getLogger("argprism")
+        
+        # Log the log file location (only in Rich console, not in log file)
+        if not quiet:
+            self.print_status(f"Log file: {log_path}", "cyan")
     
     def print_banner(self):
         """Print the ARGPrism banner with Rich formatting."""
@@ -88,7 +110,7 @@ class ARGPrismCLI:
 ██║  ██║██║  ██║╚██████╔╝██║     ██║  ██║██║███████║██║ ╚═╝ ██║
 ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚═╝╚══════╝╚═╝     ╚═╝
         """
-        self.console.print(Text(banner, style="magenta"))
+        self.console.print(Text(banner, style="cyan bold"))
         self.console.print(Panel(Text("ARGPrism CLI Agent v1.0.0", justify="right"), style="bold red", expand=False))
     
     def print_status(self, message, style="green"):
@@ -184,12 +206,23 @@ class ARGPrismCLI:
             self.console.print(f"Error: Input file '{args.input}' does not exist.", style="bold red")
             return 1
         
-        self.setup_logging(log_file=args.log_file, verbose=args.verbose, quiet=args.quiet)
+        # Ensure output directory exists before setting up logging
+        output_path = Path(args.output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        self.setup_logging(output_dir=args.output_dir, log_file=args.log_file, verbose=args.verbose, quiet=args.quiet)
         
         try:
             self.print_status(f"Starting ARGPrism 'v{__version__}'", "green")
             self.print_status(f"Processing input file: {args.input}", "cyan")
             self.print_status(f"Output directory: '{args.output_dir}'", "cyan")
+            
+            # Log the start of the analysis
+            if self.logger:
+                self.logger.info(f"Starting ARGPrism analysis v{__version__}")
+                self.logger.info(f"Input file: {args.input}")
+                self.logger.info(f"Output directory: {args.output_dir}")
+                self.logger.info(f"Command line args: {' '.join(sys.argv)}")
             
             # Run the pipeline
             result = run_pipeline(
@@ -209,12 +242,20 @@ class ARGPrismCLI:
             
             self.print_status(f"Results saved to: {args.output_dir}")
             self.print_status("ARGPrism completed successfully!", "green")
+            if self.logger:
+                self.logger.info("ARGPrism analysis completed successfully")
             
         except Exception as e:
+            error_msg = f"Pipeline failed with error: {str(e)}"
             self.console.print(f"Error: {str(e)}", style="bold red")
+            if self.logger:
+                self.logger.error(error_msg)
             if args.verbose:
                 import traceback
-                self.console.print(traceback.format_exc(), style="bold red")
+                traceback_str = traceback.format_exc()
+                self.console.print(traceback_str, style="bold red")
+                if self.logger:
+                    self.logger.error(f"Full traceback: {traceback_str}")
             return 1
         
         return 0

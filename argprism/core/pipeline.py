@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -50,7 +51,12 @@ def run_pipeline(
     build_diamond_db: bool = True,
     verbose: bool = True,
 ) -> PipelineResult:
+    logger = logging.getLogger("argprism.pipeline")
     start_time = time.time()
+    
+    logger.info("Starting ARGPrism pipeline")
+    logger.info(f"Input FASTA: {input_fasta}")
+    logger.info(f"Output directory: {output_dir}")
 
     input_fasta = Path(input_fasta)
     output_dir = Path(output_dir)
@@ -68,25 +74,33 @@ def run_pipeline(
         print_status(f"Loading resources from {PACKAGE_ROOT}", "cyan")
 
     device = select_device(preferred_device)
+    logger.info(f"Using device: {device}")
     if verbose:
         print_status(f"Using device: '{device}'", "cyan")
 
+    logger.info("Loading protein language model")
     tokenizer, model = load_plm(device)
     if verbose:
         print_status("Generating embeddings for input sequences...", "cyan")
+    logger.info("Generating embeddings for input sequences")
     embeddings, sequences = generate_embeddings(input_fasta, tokenizer, model, device, verbose=verbose)
+    logger.info(f"Generated embeddings for {len(sequences)} sequences")
 
     if verbose:
         print_status("Loading classifier...", "cyan")
+    logger.info(f"Loading classifier from {classifier_path}")
     classifier = load_classifier(classifier_path, device)
 
     if verbose:
         print_status("Classifying sequences...", "cyan")
+    logger.info("Classifying sequences using trained model")
     predictions = classify_embeddings(embeddings, classifier, device)
 
     if verbose:
         print_status("Saving predicted ARG sequences...", "cyan")
+    logger.info("Saving predicted ARG sequences")
     predicted_count = save_predicted_args(sequences, predictions, output_fasta)
+    logger.info(f"Predicted {predicted_count} ARG sequences out of {len(sequences)} total sequences")
 
     diamond_path: Optional[Path] = None
     report_path: Optional[Path] = None
@@ -97,6 +111,7 @@ def run_pipeline(
     if predicted_count:
         if verbose:
             print_status("Mapping predicted ARGs to reference ARG database with DIAMOND...", "cyan")
+        logger.info("Running DIAMOND BLAST analysis against reference database")
         run_diamond(
             output_fasta,
             arg_db_fasta,
@@ -107,23 +122,31 @@ def run_pipeline(
             verbose=verbose,
         )
         diamond_path = diamond_output
+        logger.info(f"DIAMOND results saved to {diamond_output}")
 
         if verbose:
             print_status("Loading ARG metadata...", "cyan")
+        logger.info(f"Loading ARG metadata from {metadata_json}")
         metadata = load_metadata(metadata_json)
 
         if verbose:
             print_status("Parsing DIAMOND mapping results...", "cyan")
+        logger.info("Parsing DIAMOND mapping results")
         best_hits = parse_diamond_hits(diamond_output)
 
         if verbose:
             print_status("Generating final annotated report...", "cyan")
+        logger.info("Generating final annotated report")
         generate_report(predictions, best_hits, metadata, final_report_path)
         report_path = final_report_path
-    elif verbose:
-        print_status("No ARG predictions were made; skipping DIAMOND mapping and report generation.", "yellow")
+        logger.info(f"Final report saved to {final_report_path}")
+    else:
+        logger.info("No ARG predictions were made; skipping DIAMOND mapping and report generation")
+        if verbose:
+            print_status("No ARG predictions were made; skipping DIAMOND mapping and report generation.", "yellow")
 
     elapsed = time.time() - start_time
+    logger.info(f"Pipeline completed successfully in {elapsed:.2f} seconds")
     if verbose:
         print_status(f"Pipeline complete in {elapsed:.2f} seconds", "green")
 
